@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text Moderation Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        input, button { padding: 8px; font-size: 16px; }
+        #result { margin-top: 20px; font-weight: bold; }
+        .blocked { color: red; }
+        .approved { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Text Moderation Demo</h1>
+    <input type="text" id="message" placeholder="Gib hier deinen Text ein" size="50">
+    <button onclick="checkMessage()">Prüfen</button>
+    <div id="result"></div>
+
+    <script>
+        async function checkMessage() {
+            const message = document.getElementById("message").value;
+            try {
+                const response = await fetch("http://127.0.0.1:8000/moderate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Fehler! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const resultDiv = document.getElementById("result");
+
+                if (data.status === "BLOCKED") {
+                    resultDiv.innerHTML = `BLOCKED - Grund: ${data.reason}`;
+                    resultDiv.className = "blocked";
+                } else if (data.status === "APPROVED") {
+                    resultDiv.innerHTML = `APPROVED - Nachricht erlaubt`;
+                    resultDiv.className = "approved";
+                } else {
+                    resultDiv.innerHTML = `Fehler: ${data.reason}`;
+                    resultDiv.className = "";
+                }
+            } catch (err) {
+                document.getElementById("result").innerHTML = `Fetch Fehler: ${err}`;
+            }
+        }
+    </script>
+</body>
+</html>
